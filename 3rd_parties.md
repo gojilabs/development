@@ -8,6 +8,6 @@ This is the collection of the best practices, tips and tricks and guidelines how
 - [Sendgrid - TBD](./3rd_parties/sendgrid.md)
 - [Twilio - TBD](./3rd_parties/twilio.md)
 - [Stripe - TBD](./3rd_parties/stripe.md)
-- [Unit - TBD](./3rd_parties/unit.md)
+- [Unit](./3rd_parties/unit.md)
 - [Plaid - TBD](./3rd_parties/plaid.md)
 - [Customer IO - TBD](./3rd_parties/customer_io.md)

@@ -14,7 +14,7 @@ The provided guideline is based on Nylas API documentation from September 2022 a
 
 ### API keys
 
-Depending on the application, the required set of the keys for using Nylas API (and their Ruby gem) includes:
+Depending on the application, the set of the keys for using Nylas API (and their Ruby gem) includes:
 
 - `CLIENT_ID` - The Client ID found on the dashboard page for the Nylas App
 - `CLIENT_SECRET` - The Client Secret found on the dashboard page for the Nylas App
@@ -22,7 +22,7 @@ Depending on the application, the required set of the keys for using Nylas API (
 
 When we let users connect their own calendars to their user profiles in the application, every connection has its own access token. In this case global `ACCESS_TOKEN` key is not necessary.
 
-Usually in Rails application we keep these keys with the prefix NYLAS: `NYLAS_CLIENT_ID`, `NYLAS_CLIENT_SECRET`, `NYLAS_ACCESS_TOKEN`
+Usually in Rails application we keep these keys with the prefix `NYLAS_`: `NYLAS_CLIENT_ID`, `NYLAS_CLIENT_SECRET`, `NYLAS_ACCESS_TOKEN`
 
 ### API wrapper
 
