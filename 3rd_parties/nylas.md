@@ -10,28 +10,37 @@ For application developers Nylas offers:
 The provided guideline is based on Nylas API documentation from September 2022 and on using 
 **nylas** gem version _5.12.1_.
 
+## Prerequisites
+
+1. Add the gem to the `Gemfile`:
+   ```ruby
+   gem 'nylas'
+   ```
+   and run `bundle install`
+
+2. Add required keys to environment variables. Usually for development they are placed to `.env` file. Depending on the application, the set of the keys for using API and the Ruby gem includes:
+
+   - `CLIENT_ID` - The Client ID found on the dashboard page for the Nylas App
+   - `CLIENT_SECRET` - The Client Secret found on the dashboard page for the Nylas App
+   - `ACCESS_TOKEN` - The Access Token that is provided to authenticate an account to the Nylas App
+
+   When we let users connect their own calendars to their user profiles in the application, every connection has its own access token. In this case global `ACCESS_TOKEN` key is not necessary.
+
+   Usually in Rails application we keep these keys with the prefix `NYLAS_`: `NYLAS_CLIENT_ID`, `NYLAS_CLIENT_SECRET`, `NYLAS_ACCESS_TOKEN`
+
 ## Usage
 
-### API keys
-
-Depending on the application, the set of the keys for using Nylas API (and their Ruby gem) includes:
-
-- `CLIENT_ID` - The Client ID found on the dashboard page for the Nylas App
-- `CLIENT_SECRET` - The Client Secret found on the dashboard page for the Nylas App
-- `ACCESS_TOKEN` - The Access Token that is provided to authenticate an account to the Nylas App
-
-When we let users connect their own calendars to their user profiles in the application, every connection has its own access token. In this case global `ACCESS_TOKEN` key is not necessary.
-
-Usually in Rails application we keep these keys with the prefix `NYLAS_`: `NYLAS_CLIENT_ID`, `NYLAS_CLIENT_SECRET`, `NYLAS_ACCESS_TOKEN`
-
-### API wrapper
+### The client initialization
 
 The Nylas API gem is easy to use and usually does not require a special wrapper (a class in `lib` folder that helps to integrate their API into the app). For example this is how the API client is initiated in the controller:
+
 ```ruby
-@nylas_client = Nylas::API.new(
-  app_id:     ENV.fetch('NYLAS_CLIENT_ID'),
-  app_secret: ENV.fetch('NYLAS_CLIENT_SECRET')
-)
+def nylas_client
+  @nylas_client ||= Nylas::API.new(
+    app_id:     ENV.fetch('NYLAS_CLIENT_ID'),
+    app_secret: ENV.fetch('NYLAS_CLIENT_SECRET')
+  )
+end
 ```
 
 ### Connecting user calendar
@@ -47,7 +56,7 @@ redirect_uri = url_for(
   action:     'callback'
 )
 
-url = @nylas_client.authentication_url(
+url = nylas_client.authentication_url(
   redirect_uri:  redirect_uri,
   scopes:        ['calendar'],
   response_type: 'code',
@@ -70,7 +79,7 @@ pod = current_user.admin_pods.find(params[:state])
 raise UnprocessableEntityError, :calendar_connected unless pod.calendar_data.empty?
 
 pod.calendar_data = {
-  access_token: @nylas_client.exchange_code_for_token(params[:code].to_s),
+  access_token: nylas_client.exchange_code_for_token(params[:code].to_s),
   user_id:      current_user.id
 }
 

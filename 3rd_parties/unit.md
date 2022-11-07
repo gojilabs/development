@@ -6,11 +6,9 @@ For application developers Unit offers a [documented API](https://docs.unit.co/)
 
 The provided guideline is based on Unit API documentation from August 2022.
 
-## Usage
+## Prerequisites
 
-### API keys
-
-To work with Unit API the developer needs to use the following set of environment variables:
+To work with Unit API the developer needs to use the set of environment variables. Usually for development they are placed to `.env` file.
 
 - `BASE_URL` - The url to access the Unit API. There are different URLs for staging and production environmants
 - `ORG_TOKEN` - The common developer's token for using Unit endpoints
@@ -18,12 +16,14 @@ To work with Unit API the developer needs to use the following set of environmen
 
 Usually in Rails application we keep these keys with the prefix `UNIT_`: `UNIT_BASE_URL`, `UNIT_ORG_TOKEN`, `UNIT_WEBHOOK_TOKEN`
 
-### API wrapper
+## Usage
+
+### The wrapper class
 
 Since there is no a gem that provides a wrapper around Unit API calls and handle its errors, the wrapper needs to be written by ourselves. The wrapper can be a class in `lib` folder that contains public methods for accessing Unit endpoints and service methods to low-level access to Unit API. Here is the extract:
 
 ```ruby
-# frozen_string_literal: true
+# lib/integrations/unit.rb
 
 module Integrations
   class Unit
@@ -97,6 +97,8 @@ To access Unit API endpoints public methods are added to `Integrations::Unit` wr
 The following methods let access customer application information, namely: get application by its Id, create application and update it:
 
 ```ruby
+# lib/integrations/unit.rb
+
 module Integrations
   class Unit
     class << self
@@ -175,7 +177,7 @@ Integrations::Unit.update_application(user.unit_application_id, attributes)
 
 For more examples see [the wrapper class from Grind24 project](https://github.com/BoB-Company/grind-banking-api/blob/main/lib/integrations/unit.rb).
 
-### Webhooks
+### The webhooks
 
 The Unit service may perform some operations asynchronously. For example, KYC check for new customer applications, or activating customer debit cards. To let the app know about these changes, the [webhook](https://docs.unit.co/webhooks) mechanism is developed.
 
@@ -184,6 +186,8 @@ The developers register webhook callback URL in Unit dashboard. In response they
 The types of events in Unit that initiate webhook request can be set up in the dashboard. This is how webhook controller may look like:
 
 ```ruby
+# app/controllers/unit_webhooks_controller.rb
+
 class UnitWebhooksController < ApplicationController
   skip_before_action :authenticate!
   before_action :verify_webhook

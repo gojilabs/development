@@ -10,25 +10,33 @@ For application developers Customer.io offers:
 The provided guideline is based on Customer.io API documentation from September 2022 and on using
 **customerio** gem version _4.3.0_.
 
+## Prerequisites
+
+1. Add the gem to the `Gemfile`:
+   ```ruby
+   gem 'customerio'
+   ```
+   and run `bundle install`
+
+2. Add required keys to environment variables. Usually for development they are placed to `.env` file. The set of the keys for using Customer.io API (and their Ruby gem) includes:
+
+   - `SITE_ID` - The internal Id of the application in Customer.io
+   - `API_KEY` - The API key (for using from backend)
+   - `APP_KEY` - The APP key (for using from frontend)
+
+   The `APP_KEY` is not required when the Customer.io is used for tracking user actions from backend application only.
+
+   Usually in Rails application we keep these keys with the prefix `CUSTOMERIO_`: `CUSTOMERIO_SITE_ID`, `CUSTOMERIO_API_KEY`, `CUSTOMERIO_APP_KEY`
+
 ## Usage
 
-### API keys
-
-The set of the keys for using Customer.io API (and their Ruby gem) includes:
-
-- `SITE_ID` - The internal Id of the application in Customer.io
-- `API_KEY` - The API key (for using from backend)
-- `APP_KEY` - The APP key (for using from frontend)
-
-The `APP_KEY` is not required when the Customer.io is used for tracking user actions from backend application only.
-
-Usually in Rails application we keep these keys with the prefix `CUSTOMERIO_`: `CUSTOMERIO_SITE_ID`, `CUSTOMERIO_API_KEY`, `CUSTOMERIO_APP_KEY`
-
-### API wrapper
+### The wrapper class
 
 The Customer.io developers recommend to initialize connection to the service (their client) in some Rails initializer. This method suggests using global variables, which is considered as a bad practice. The other way to use Customer.io API through their gem is with some wrapper class. The wrapper can be a class in `lib` folder that contains public methods for accessing Customer.io endpoints. Here is how it may look like:
 
 ```ruby
+# lib/integrations/customerio.rb
+
 require 'customerio'
 
 module Integrations
@@ -66,7 +74,7 @@ end
 
 There are some examples of usage of Customer.io service using the wrapper class provided above.
 
-To initialize the application user the record in Customer.io needs to be created. Usually it happens right after creating user records in the app itself. The code could look like:
+To initialize the application user the record in Customer.io needs to be created. Usually it happens right after creating user records in the app itself. The code could look like this:
 
 ```ruby
 attributes = {
