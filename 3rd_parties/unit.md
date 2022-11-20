@@ -10,7 +10,7 @@ The provided guideline is based on Unit API documentation from August 2022.
 
 To work with Unit API the developer needs to use the set of environment variables. Usually for development they are placed to `.env` file.
 
-- `BASE_URL` - The url to access the Unit API. There are different URLs for staging and production environmants
+- `BASE_URL` - The url to access the Unit API. There are different URLs for staging and production environments
 - `ORG_TOKEN` - The common developer's token for using Unit endpoints
 - `WEBHOOK_TOKEN` - The token for verifying Unit webhook callbacks
 
