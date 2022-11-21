@@ -214,3 +214,11 @@ Integrations::ActiveCampaign.delete_list(ac_list_id)
 ```
 
 For more examples see [the wrapper class from IowaLeague project](https://github.com/gojilabs/iowa-league/blob/main/api/lib/integrations/active_campaign.rb).
+
+### The webhooks
+
+The ActiveCampaign service allows to trace the changes in lists / contacts / campaigns asynchronously, using webhooks. For example, when a new subscription list is created in ActiveCampaign dashboard, the service may inform the application about it, so the application may react on it and create some list representation internally. This can be done using [webhooks](https://developers.activecampaign.com/page/webhooks).
+
+The idea is to let developers register some callback URLs which will be requested when some event happens on ActiveCampaign end (in dashboard, such as creating new subscription list, or other way, such as unsubscribing from the list). In that calls the service would pass the info about event - newly created list details, or contact details.
+
+Unfortunately, the service does not add any security level to these calls, such as HTTP headers with secret tokens that need to be validated. As a result, using this option is a security breach in the app and is not allowed.
