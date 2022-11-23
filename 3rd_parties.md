@@ -7,7 +7,7 @@ This is the collection of the best practices, tips and tricks and guidelines how
 - [DO Spaces - TBD](./3rd_parties/do_spaces.md)
 - [Google Places - TBD](./3rd_parties/google_places.md)
 - [Nylas](./3rd_parties/nylas.md)
-- [Plaid - TBD](./3rd_parties/plaid.md)
+- [Plaid](./3rd_parties/plaid.md)
 - [Sendgrid - TBD](./3rd_parties/sendgrid.md)
 - [Stripe - TBD](./3rd_parties/stripe.md)
 - [Twilio - TBD](./3rd_parties/twilio.md)
