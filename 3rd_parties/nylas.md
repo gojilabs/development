@@ -1,38 +1,38 @@
 # Nylas
 
-Nylas is a SAAS that helps applications to connect their users with their mailboxes, contact lists and calendars in other services. For example, we can use Nylas API to let our users to connect their calendars in Google Calendar, and use them in our app.
+Nylas is a SAAS that helps applications connect their users to their mailboxes, contact lists, and calendars in other services. For example, we can use the Nylas API to let our users connect their calendars to Google Calendar and use them in our app.
 
-For application developers Nylas offers:
-- a [documented API](https://developer.nylas.com/)
-- dashboards to manage applications and their connections to other services
-- a [gem](https://github.com/nylas/nylas-ruby) for the seamless integrations with the app
+For app developers, Nylas offers:
+- [documented API](https://developer.nylas.com/)
+- dashboards for managing applications and their connections to other services
+- [gem](https://github.com/nylas/nylas-ruby) for seamless integration with the application.
 
-The provided guideline is based on Nylas API documentation from September 2022 and on using 
+This guide is based on the September 2022 Nylas API documentation and uses
 **nylas** gem version _5.12.1_.
 
 ## Prerequisites
 
-1. Add the gem to the `Gemfile`:
+1. Add gem to `Gemfile`:
    ```ruby
    gem 'nylas'
    ```
    and run `bundle install`
 
-2. Add required keys to environment variables. Usually for development they are placed to `.env` file. Depending on the application, the set of the keys for using API and the Ruby gem includes:
+2. Add the necessary keys to the environment variables. Usually they are placed in the `.env` file for development. Depending on the application, a set of keys to use the API and Ruby gem include:
 
-   - `CLIENT_ID` - The Client ID found on the dashboard page for the Nylas App
-   - `CLIENT_SECRET` - The Client Secret found on the dashboard page for the Nylas App
-   - `ACCESS_TOKEN` - The Access Token that is provided to authenticate an account to the Nylas App
+   - `CLIENT_ID` - the client ID, which can be found on the Nylas application dashboard page.
+   - `CLIENT_SECRET` - the client secret listed on the dashboard page of the Nylas application.
+   - `ACCESS_TOKEN` - the access token that is provided to authenticate the account in the Nylas App.
 
-   When we let users connect their own calendars to their user profiles in the application, every connection has its own access token. In this case global `ACCESS_TOKEN` key is not necessary.
+   When we allow users to connect their own calendars to their user profiles in the app, each connection has its own access token. In this case, the `ACCESS_TOKEN` global key is not needed.
 
-   Usually in Rails application we keep these keys with the prefix `NYLAS_`: `NYLAS_CLIENT_ID`, `NYLAS_CLIENT_SECRET`, `NYLAS_ACCESS_TOKEN`
+   Normally in Rails application we store these keys with prefix `NYLAS_`: `NYLAS_CLIENT_ID`, `NYLAS_CLIENT_SECRET`, `NYLAS_ACCESS_TOKEN`.
 
 ## Usage
 
 ### The client initialization
 
-The Nylas API gem is easy to use and usually does not require a special wrapper (a class in `lib` folder that helps to integrate their API into the app). For example this is how the API client is initiated in the controller:
+The Nylas API gem is easy to use and usually requires no special wrapper (a class in the `lib` folder that helps integrate their API into the application). For example, here is how the API client is initialized in the controller:
 
 ```ruby
 def nylas_client
@@ -45,7 +45,7 @@ end
 
 ### Connecting user calendar
 
-To connect user calendar the app uses OAuth authentication and passes control to Nylas service (so called hosted authentication). The first step to connect is to redirect the user to the special URL:
+To connect a user calendar, the application uses OAuth authentication and passes control to the Nylas service (called [hosted authentication](https://developer.nylas.com/docs/the-basics/authentication/hosted-authentication/)). The first step to connect is to redirect the user to a special URL:
 
 ```ruby
 redirect_uri = url_for(
@@ -66,9 +66,9 @@ url = nylas_client.authentication_url(
 )
 ```
 
-When redirected, the user will see a special page from Nylas domain, that asks them to authenticate in 3rd party calendar service. In provided example this is MS Outlook.
+When redirected, the user will see a special page from the Nylas domain that asks them to authenticate to a third-party calendar service. In the example above, this is MS Outlook.
 
-After successful authentication the user will be redirected back to the application - to the `redirect_uri` which was provided in the original URL. The code of this handler may look like:
+After successful authentication, the user will be redirected back to the application - to `redirect_uri`, which was specified in the original URL. The code for this handler might look like this:
 
 ```ruby
 raise UnprocessableEntityError, :code_missing if params[:code].blank?
@@ -85,7 +85,6 @@ pod.calendar_data = {
 
 calendar_nylas_client = Nylas::API.new(access_token: pod.calendar_data[:access_token])
 calendars = calendar_nylas_client.calendars
-
 ```
 
-For more examples see [the controller from Healthpod project](https://github.com/gojilabs/healthpod-api/blob/main/app/controllers/calendars_controller.rb).
+See [controller from Healthpod project](https://github.com/gojilabs/healthpod-api/blob/main/app/controllers/calendars_controller.rb) for other examples.

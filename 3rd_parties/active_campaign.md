@@ -1,25 +1,25 @@
-# Active Campaign
+# ActiveCampaign
 
-Active Campaign is the subscription service. It helps customers to manage their subscribe list, trace subscribers, monitor effectiveness of mailing campaigns, etc.
+ActiveCampaign is a subscription service. It helps customers manage subscriber lists, track subscribers, monitor the effectiveness of email campaigns, etc.
 
-For application developers Active Campaign offers various [guides on integration](https://developers.activecampaign.com/docs), [documented API](https://developers.activecampaign.com/reference) and dashboards to manage applications. In addition to a regular production environment they offer [sandbox environment](https://developers.activecampaign.com/page/developer-sandbox-accounts) to facilitate the development. As it is known, there is no Ruby gem that helps integrate the service into the Rails application.
+For application developers, ActiveCampaign offers various [integration guides](https://developers.activecampaign.com/docs), [documented API](https://developers.activecampaign.com/reference) and application management dashboards. In addition to the usual production environment, they offer a [sandbox environment](https://developers.activecampaign.com/page/developer-sandbox-accounts) to facilitate development. As of now, the service does not offer any Ruby gem that makes it easy to integrate the service into a Rails application.
 
-The provided guideline is based on Active Campaign API documentation version 3, November 2022.
+The provided guide is based on the ActiveCampaign API version 3 documentation, November 2022.
 
 ## Prerequisites
 
-To work with Active Campaign API the developer needs to use the set of environment variables. Usually for development they are placed to `.env` file.
+In order to work with the ActiveCampaign API, the developer needs to use a set of environment variables. Typically they are placed in the `.env` file for development.
 
-- `BASE_URL` - The url to access the API. There are different URLs for staging and production environments
-- `TOKEN` - The common developer's token for using Active Campaign endpoints
+- `BASE_URL` - the URL to access the API. There are different URLs for staging and production environments.
+- `TOKEN` - generic developer token for using ActiveCampaign endpoints.
 
-Usually in Rails application we keep these keys with the prefix `ACTIVE_CAMPAIGN_`: `ACTIVE_CAMPAIGN_BASE_URL`, `ACTIVE_CAMPAIGN_TOKEN`
+Usually in a Rails application we store these tokens with the prefix `ACTIVE_CAMPAIGN_`: `ACTIVE_CAMPAIGN_BASE_URL`, `ACTIVE_CAMPAIGN_TOKEN`.
 
 ## Usage
 
 ### The wrapper class
 
-Since there is no a gem that provides a wrapper around Active Campaign API calls and handle its errors, the wrapper needs to be written by ourselves. The wrapper can be a class in `lib` folder that contains public methods for accessing Unit endpoints and service methods to low-level access to Unit API. Here is the extract:
+Since there is no gem that provides a wrapper around ActiveCampaign API calls and handles errors, the wrapper must be written yourself. The wrapper can be a class in the `lib` folder that contains public methods for accessing service endpoints and service methods for low-level access to the API. Here's an excerpt:
 
 ```ruby
 # lib/integrations/active_campaign.rb
@@ -97,9 +97,9 @@ end
 
 ### API usage
 
-To access Active Campaign API endpoints public methods are added to `Integrations::ActiveCampaign` wrapper class. Since the number of endpoints does not allow us to list them all here, let's show a couple of uses.
+To access ActiveCampaign API endpoints, public methods are added to the `Integrations::ActiveCampaign` wrapper class. Because the number of endpoints does not allow us to list them all here, we will show a few uses.
 
-The API follows RestAPI specifications in naming endpoints and using HTTP request types, so to simplify the writing of wrappers for each endpoint the metaprogramming is used:
+The API follows the RestAPI specifications in naming endpoints and using HTTP request types, so metaprogramming is used to simplify writing wrappers for each endpoint:
 
 ```ruby
 # lib/integrations/unit.rb
@@ -168,16 +168,16 @@ module Integrations
 end
 ```
 
-In the application these methods can be used in multiple scenarios.
+In an application, these methods can be used in several scenarios.
 
-To get active user id who can manage subscriptions:
+To get an active user ID that can manage subscriptions:
 
 ```ruby
 users_response = Integrations::ActiveCampaign.users(limit: 1)
 @user_id = users_response&.dig(:users)&.first&.dig(:id)
 ```
 
-To get user group id:
+To get user group ID:
 
 ```ruby
 group_response = Integrations::ActiveCampaign.user(user_id, :user_group)
@@ -201,13 +201,13 @@ contact_response = Integrations::ActiveCampaign.create_contact(attributes)
 @contact_id = contact_response.dig(:contact, :id)
 ```
 
-To subscribe the contact to some list:
+To subscribe a contact to some list:
 
 ```ruby
 Integrations::ActiveCampaign.subscribe_contact(ac_contact_id, ac_list_id)
 ```
 
-To delete subscription:
+To remove a subscription:
 
 ```ruby
 Integrations::ActiveCampaign.delete_list(ac_list_id)
@@ -217,8 +217,8 @@ For more examples see [the wrapper class from IowaLeague project](https://github
 
 ### The webhooks
 
-The ActiveCampaign service allows to trace the changes in lists / contacts / campaigns asynchronously, using webhooks. For example, when a new subscription list is created in ActiveCampaign dashboard, the service may inform the application about it, so the application may react on it and create some list representation internally. This can be done using [webhooks](https://developers.activecampaign.com/page/webhooks).
+The ActiveCampaign service allows you to track changes to lists / contacts / campaigns asynchronously using webhooks. For example, when you create a new list of subscribers in the ActiveCampaign dashboard, the service can notify the application so that the application can react to it and create an internal representation of the list. This can be done with [webhooks](https://developers.activecampaign.com/page/webhooks).
 
-The idea is to let developers register some callback URLs which will be requested when some event happens on ActiveCampaign end (in dashboard, such as creating new subscription list, or other way, such as unsubscribing from the list). In that calls the service would pass the info about event - newly created list details, or contact details.
+The idea is to allow developers to register some callback URLs that will be requested when some event occurs on the ActiveCampaign side (in the dashboard, such as creating a new subscriber list, or otherwise, such as unsubscribing from the list). In these calls, the service will pass information about the event-the data of the list just created, or contact information.
 
-Unfortunately, the service does not add any security level to these calls, such as HTTP headers with secret tokens that need to be validated. As a result, using this option is a security breach in the app and is not allowed.
+Unfortunately, the service does not add any level of security to these calls, such as HTTP headers with secret tokens that need to be validated. Any user knowing this URL may misuse it. As a result, using this option is a violation of application security and is not allowed.

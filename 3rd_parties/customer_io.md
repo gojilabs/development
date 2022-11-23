@@ -1,38 +1,37 @@
 # Customer.IO
 
-Customer.io is an automated messaging platform for collecting and processing info about application customers. We used Customer.io as an outer database for tracking users of the banking application.
+Customer.io is an automated messaging platform for collecting and processing application customer information. We used Customer.io as an external database for tracking banking application users.
 
-For application developers Customer.io offers:
-- a [documented API](https://customer.io/docs/api/)
-- dashboards to manage applications
-- a [gem](https://github.com/customerio/customerio-ruby) for the seamless integrations with the app
+For application developers, Customer.io offers:
+- [documented API](https://customer.io/docs/api/)
+- Application management dashboards
+- [gem](https://github.com/customerio/customerio-ruby) for seamless integration with the application.
 
-The provided guideline is based on Customer.io API documentation from September 2022 and on using
-**customerio** gem version _4.3.0_.
+This guide is based on the September 2022 Customer.io API documentation and the use of **customerio** gem version _4.3.0_.
 
 ## Prerequisites
 
-1. Add the gem to the `Gemfile`:
+1. Add gem to the `Gemfile`:
    ```ruby
    gem 'customerio'
    ```
    and run `bundle install`
 
-2. Add required keys to environment variables. Usually for development they are placed to `.env` file. The set of the keys for using Customer.io API (and their Ruby gem) includes:
+2. Add the necessary keys to the environment variables. Usually for development they are placed in the `.env` file. A set of keys to use the Customer.io API (and their Ruby gem) include:
 
-   - `SITE_ID` - The internal Id of the application in Customer.io
-   - `API_KEY` - The API key (for using from backend)
-   - `APP_KEY` - The APP key (for using from frontend)
+   - `SITE_ID` - the internal ID of the application in Customer.io
+   - `API_KEY` - the API key (for using from backend)
+   - `APP_KEY` - the APP key (for using from frontend)
 
-   The `APP_KEY` is not required when the Customer.io is used for tracking user actions from backend application only.
+   The `APP_KEY` key is not required if Customer.io is only used to track user actions from the backend application.
 
-   Usually in Rails application we keep these keys with the prefix `CUSTOMERIO_`: `CUSTOMERIO_SITE_ID`, `CUSTOMERIO_API_KEY`, `CUSTOMERIO_APP_KEY`
+   Usually in Rails application we store these keys with prefix `CUSTOMERIO_`: `CUSTOMERIO_SITE_ID`, `CUSTOMERIO_API_KEY`, `CUSTOMERIO_APP_KEY`.
 
 ## Usage
 
 ### The wrapper class
 
-The Customer.io developers recommend to initialize connection to the service (their client) in some Rails initializer. This method suggests using global variables, which is considered as a bad practice. The other way to use Customer.io API through their gem is with some wrapper class. The wrapper can be a class in `lib` folder that contains public methods for accessing Customer.io endpoints. Here is how it may look like:
+The developers of Customer.io recommend initializing the connection to the service (their client) in some kind of Rails initializer. This method involves the use of global variables, which is considered bad practice. Another way to use the Customer.io API through their gem is to use a wrapper class. A wrapper can be a class in the `lib` folder that contains public methods for accessing Customer.io endpoints. Here's what it might look like:
 
 ```ruby
 # lib/integrations/customerio.rb
@@ -72,9 +71,9 @@ end
 
 ### API usage
 
-There are some examples of usage of Customer.io service using the wrapper class provided above.
+Here are a few examples of how to use the Customer.io service using the wrapper class presented above.
 
-To initialize the application user the record in Customer.io needs to be created. Usually it happens right after creating user records in the app itself. The code could look like this:
+To initialize an application user, an entry must be created in Customer.io. Usually this happens right after creating the user records in the application itself. The code may look like this:
 
 ```ruby
 attributes = {
@@ -86,7 +85,7 @@ attributes = {
 Integrations::Customerio.identify(params[:external_id], attributes)
 ```
 
-To track user activity and add a record about it to user profile in Customer.io the `track` method can be invoked:
+To track a user's activity and add a record of it to the user's profile in Customer.io, you can call the `track` method:
 
 ```ruby
 Integrations::Customerio.track(

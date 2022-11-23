@@ -1,26 +1,26 @@
 # Unit
 
-Unit is the banking-as-a-service platform that lets developers embed financial features into the apps. Unit is used as a backbone service for providing customers banking features, payments, money transfers.
+Unit is a banking-as-a-service platform that allows developers to embed financial functions into applications. Unit is used as a backbone service to provide customers with banking features, payments, money transfers.
 
-For application developers Unit offers a [documented API](https://docs.unit.co/) and dashboards to manage applications. There are [2 environments](https://docs.unit.co/#environments) available, staging and production. As it is known, there is no Ruby gem that helps integrate Unit service into the Rails application.
+For application developers, Unit offers a [documented API](https://docs.unit.co/) and dashboards to manage applications. There are [2 environments](https://docs.unit.co/#environments), _staging_ and _production_. As of now, there is no Ruby gem to help integrate the Unit service into a Rails application.
 
-The provided guideline is based on Unit API documentation from August 2022.
+This guide is based on the August 2022 Unit API documentation.
 
 ## Prerequisites
 
-To work with Unit API the developer needs to use the set of environment variables. Usually for development they are placed to `.env` file.
+In order to work with the Unit API, the developer needs to use a set of environment variables. Typically they are placed in the `.env` file for development.
 
-- `BASE_URL` - The url to access the Unit API. There are different URLs for staging and production environments
-- `ORG_TOKEN` - The common developer's token for using Unit endpoints
-- `WEBHOOK_TOKEN` - The token for verifying Unit webhook callbacks
+- `BASE_URL` - the URL to access the Unit API. There are different URLs for staging and production environments.
+- `ORG_TOKEN` - generic developer token for using Unit endpoints.
+- `WEBHOOK_TOKEN` - a token for checking Unit webhook callbacks.
 
-Usually in Rails application we keep these keys with the prefix `UNIT_`: `UNIT_BASE_URL`, `UNIT_ORG_TOKEN`, `UNIT_WEBHOOK_TOKEN`
+Normally in a Rails application we store these tokens with the prefix `UNIT_`: `UNIT_BASE_URL`, `UNIT_ORG_TOKEN`, `UNIT_WEBHOOK_TOKEN`.
 
 ## Usage
 
 ### The wrapper class
 
-Since there is no a gem that provides a wrapper around Unit API calls and handle its errors, the wrapper needs to be written by ourselves. The wrapper can be a class in `lib` folder that contains public methods for accessing Unit endpoints and service methods to low-level access to Unit API. Here is the extract:
+Since there is no gem that provides a wrapper around the Unit's API calls and handles its errors, the wrapper must be written yourself. The wrapper can be a class in the `lib` folder that contains public methods for accessing Unit endpoints and service methods for low-level access to the Unit API. Here is an excerpt:
 
 ```ruby
 # lib/integrations/unit.rb
@@ -92,9 +92,9 @@ end
 
 ### API usage
 
-To access Unit API endpoints public methods are added to `Integrations::Unit` wrapper class. Since the number of endpoints does not allow us to list them all here, let's show a couple of uses.
+To access Unit API endpoints, public methods are added to the `Integrations::Unit` wrapper class. Since the number of endpoints does not allow us to list them all here, we will show a few use cases.
 
-The following methods let access customer application information, namely: get application by its Id, create application and update it:
+The following methods allow you to access information about the client application, namely: get the application by its ID, create the application and update it:
 
 ```ruby
 # lib/integrations/unit.rb
@@ -143,9 +143,9 @@ module Integrations
 end
 ```
 
-In the application they can be used in the following way.
+They can be used in the application as follows.
 
-To get the status of the application:
+To get the status of an application:
 
 ```ruby
 @application ||= Integrations::Unit.application(application_id)
@@ -166,7 +166,7 @@ customer[:tags] = { externalId: params[:external_id] }
 application_data = Integrations::Unit.create_application(customer)[:data]
 ```
 
-To update application record in Unit API:
+To update the application record in the Unit API:
 
 ```ruby
 attributes = {
@@ -175,15 +175,15 @@ attributes = {
 Integrations::Unit.update_application(user.unit_application_id, attributes)
 ```
 
-For more examples see [the wrapper class from Grind24 project](https://github.com/BoB-Company/grind-banking-api/blob/main/lib/integrations/unit.rb).
+For more examples, see [the wrapper class from the Grind24 project](https://github.com/BoB-Company/grind-banking-api/blob/main/lib/integrations/unit.rb).
 
 ### The webhooks
 
-The Unit service may perform some operations asynchronously. For example, KYC check for new customer applications, or activating customer debit cards. To let the app know about these changes, the [webhook](https://docs.unit.co/webhooks) mechanism is developed.
+The Unit service can perform some operations asynchronously. For example, checking KYC for new customers or activating customers' debit cards. To inform the application of these changes, the [webhook](https://docs.unit.co/webhooks) mechanism is designed.
 
-The developers register webhook callback URL in Unit dashboard. In response they receive a special token to validate incoming webhook requests that are coming from Unit.
+Developers register a webhook callback URL in the Unit dashboard. The types of events in the Unit that initiate webhook requests can be configured in the dashboard as well. In response, they receive a special token to acknowledge incoming webhook requests that come from the Unit.
 
-The types of events in Unit that initiate webhook request can be set up in the dashboard. This is how webhook controller may look like:
+ This is what a webhook controller might look like:
 
 ```ruby
 # app/controllers/unit_webhooks_controller.rb
@@ -236,4 +236,4 @@ class UnitWebhooksController < ApplicationController
 end
 ```
 
-For more examples see [the controller itself from Grind24 project](https://github.com/BoB-Company/grind-banking-api/blob/main/app/controllers/unit_webhooks_controller.rb).
+For more examples, see [the controller itself from Grind24 project](https://github.com/BoB-Company/grind-banking-api/blob/main/app/controllers/unit_webhooks_controller.rb).
