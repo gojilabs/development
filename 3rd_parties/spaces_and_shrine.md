@@ -208,7 +208,7 @@ For more information about uploaders and attachments see [Shrine documentation](
 
 When developing applications, we use direct uploading of files to the storage. This means that when a file is uploaded by the user, the file is uploaded directly to Digital Ocean Spaces, bypassing the application server. The upload happens in the background - as soon as the client application has received the file, it is uploaded to the bucket. This significantly reduces interface latency caused by downloading and processing the file.
 
-To enable direct upload we need to add a route to the application:
+To enable direct upload we need to add these routes to the application:
 
 ```ruby
 # config/routes.rb
@@ -225,29 +225,29 @@ Rails.application.routes.draw do
 end
 ```
 
-The controller for this route is responsible for handling the upload request. The `presign` endpoint is used for getting credentials for the following file upload, and the `upload` endpoint is used for uploading the file itself.
+The `presign` endpoint is used for getting credentials for the following file upload. After having credentials, the frontend is able to upload the file to Spaces independently of backend, so backend does not provide methods for this. For local file storage the `upload` endpoint is used for uploading the file itself - in this case `presign` endpoint is not used.
 
 ```ruby
 # app/controllers/files_controller.rb
 
 class FilesController < ApplicationController
-   skip_before_action :authenticate!
+  skip_before_action :authenticate!
 
-   def upload
-      setup_rack_response BaseUploader.upload_response(:cache, request.env)
-   end
+  def upload
+    setup_rack_response BaseUploader.upload_response(:cache, request.env)
+  end
 
-   def presign
-      setup_rack_response BaseUploader.presign_response(:cache, request.env)
-   end
+  def presign
+    setup_rack_response BaseUploader.presign_response(:cache, request.env)
+  end
 
-   private
+  private
 
-   def setup_rack_response((status, hdrs, body))
-      self.status = status
-      headers.merge!(hdrs)
-      self.response_body = body
-   end
+  def setup_rack_response((status, hdrs, body))
+    self.status = status
+    headers.merge!(hdrs)
+    self.response_body = body
+  end
 end
 ```
 
