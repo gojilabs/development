@@ -31,7 +31,7 @@ For developers, storing files in Digital Ocean Spaces is not much different from
 
 ## Usage
 
-We do not work with the file storage directly. Usually we use some gem that wraps all interaction with the file repository and provides a convenient interface. These are the following gems:
+We do not work with the file storage directly. Usually we use some gem that wraps all interaction with the file storage and provides a convenient interface. These are the following gems:
 
 - [Paperclip](https://github.com/thoughtbot/paperclip) (now deprecated)
 - [CarrierWave](https://github.com/carrierwaveuploader/carrierwave)
@@ -157,7 +157,7 @@ class BaseUploader < Shrine
 end
 ```
 
-Depending on the app needs we can define different uploaders for different types of files. For example, we can define an uploader for user avarats and another one for documents.
+Depending on the app needs we can define different uploaders for different types of files. For example, we can define an uploader for user avatars:
 
 ```ruby 
 # app/uploaders/avatar_uploader.rb
@@ -175,6 +175,8 @@ class AvatarUploader < BaseUploader
   end
 end
 ```
+
+And another one for documents:
 
 ```ruby
 # app/uploaders/document_uploader.rb
@@ -294,6 +296,6 @@ module Attachment
 end
 ```
 
-(To let Shrine know about these jobs they are declared in `config/initializers/shrine.rb`.)
+(Make sure these jobs are declared in `config/initializers/shrine.rb` so Shrine knows about them.)
 
 For more information see [Shrine documentation](https://shrinerb.com/docs/processing).
