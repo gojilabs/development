@@ -5,7 +5,7 @@ This is the collection of the best practices, tips and tricks and guidelines how
 - [Active Campaign](./3rd_parties/active_campaign.md)
 - [Customer IO](./3rd_parties/customer_io.md)
 - [Digital Ocean Spaces and Shrine](./3rd_parties/spaces_and_shrine.md)
-- [Google Places - TBD](./3rd_parties/google_places.md)
+- [Google Places](./3rd_parties/google_places.md)
 - [Nylas](./3rd_parties/nylas.md)
 - [Plaid](./3rd_parties/plaid.md)
 - [Sendgrid - TBD](./3rd_parties/sendgrid.md)
