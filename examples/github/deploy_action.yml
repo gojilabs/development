@@ -1,0 +1,203 @@
+name: Unified backend/frontend multi-environment deployment workflow
+
+on:
+  push:
+    branches:
+      - staging
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  setup:
+    name: Common setup
+    runs-on: ubuntu-latest
+    outputs:
+      cluster_base:     ${{ steps.environment.outputs.cluster_base }}
+      environment:      ${{ steps.environment.outputs.environment }}
+      timestamp:        ${{ steps.time.outputs.timestamp }}
+      should_build_app: ${{ steps.check-app.outputs.should_build_app }}
+      should_build_api: ${{ steps.check-api.outputs.should_build_api }}
+      container_base:   ${{ steps.environment.outputs.container_base }}
+      namespace:        ${{ steps.environment.outputs.namespace }}
+    steps:
+      - name: Get time
+        id: time
+        run: |
+          echo "timestamp=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Select environment
+        id: environment
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=Production" >> $GITHUB_OUTPUT
+            echo "cluster_base=k8s-cluster-production" >> $GITHUB_OUTPUT
+            echo "namespace=production-${{ vars.PROJECT_NAME }}" >> $GITHUB_OUTPUT
+            echo "container_base=${{ vars.CONTAINER_REGISTRY }}/production-${{ vars.PROJECT_NAME }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+            echo "environment=Staging" >> $GITHUB_OUTPUT
+            echo "cluster_base=k8s-cluster-staging" >> $GITHUB_OUTPUT
+            echo "namespace=staging-${{ vars.PROJECT_NAME }}" >> $GITHUB_OUTPUT
+            echo "container_base=${{ vars.CONTAINER_REGISTRY }}/staging-${{ vars.PROJECT_NAME }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
+      - name: Docker login
+        run: doctl registry login -t ${{ secrets.DO_TOKEN }}
+      - name: Check if API container needs to be built
+        id: check-api
+        run: |
+          echo "should_build_api=$(doctl registry repository list-tags ${{ steps.container-config.outputs.namespace }}-api --format 'Tag' --no-header | grep ${{ github.sha }} > /dev/null && echo '0' || echo '1')" >> $GITHUB_OUTPUT
+      - name: Check if app container needs to be built
+        id: check-app
+        run: |
+          echo "should_build_app=$(doctl registry repository list-tags ${{ steps.container-config.outputs.namespace }}-app --format 'Tag' --no-header | grep ${{ github.sha }} > /dev/null && echo '0' || echo '1')" >> $GITHUB_OUTPUT
+
+  config_api:
+    environment:
+      name: ${{ needs.setup.outputs.environment }}
+      url: ${{ vars.API_BASE_URL }}
+    name: Configure API container
+    runs-on: ubuntu-latest
+    needs: setup
+    concurrency: config_api
+    outputs:
+      container: ${{ steps.api-env-config.outputs.container }}
+      container_url: ${{ steps.api-env-config.outputs.container_url }}
+      timestamped_container_url: ${{ steps.api-env-config.outputs.timestamped_container_url }}
+      container_tag: ${{ github.sha }}
+      hashed_container_url: ${{ steps.api-env-config.outputs.hashed_container_url }}
+      latest_container_url: ${{ steps.api-env-config.outputs.latest_container_url }}
+    steps:
+      - name: Configure API environment
+        id: api-env-config
+        run: |
+          echo "container=${{ needs.setup.outputs.namespace }}-api" >> $GITHUB_OUTPUT
+          echo "container_url=${{ needs.setup.outputs.container_base }}-api" >> $GITHUB_OUTPUT
+          echo "timestamped_container_url=${{ needs.setup.outputs.container_base}}-api:${{ needs.setup.outputs.timestamp }}" >> $GITHUB_OUTPUT
+          echo "latest_container_url=${{ needs.setup.outputs.container_base }}-api:latest" >> $GITHUB_OUTPUT
+          echo "hashed_container_url=${{ needs.setup.outputs.container_base }}-api:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  config_app:
+    environment:
+      name: ${{ needs.setup.outputs.environment }}
+      url: ${{ vars.APP_BASE_URL }}
+    name: Configure app container
+    runs-on: ubuntu-latest
+    needs: setup
+    concurrency: config_app
+    outputs:
+      container: ${{ steps.app-env-config.outputs.container }}
+      container_url: ${{ steps.app-env-config.outputs.container_url }}
+      timestamped_container_url: ${{ steps.app-env-config.outputs.timestamped_container_url }}
+      container_tag: ${{ github.sha }}
+      hashed_container_url: ${{ steps.app-env-config.outputs.hashed_container_url }}
+      latest_container_url: ${{ steps.app-env-config.outputs.latest_container_url }}
+    steps:
+      - name: Configure app environment
+        id: app-env-config
+        run: |
+          echo "container=${{ needs.setup.outputs.namespace }}-app" >> $GITHUB_OUTPUT
+          echo "container_url=${{ needs.setup.outputs.container_base }}-app" >> $GITHUB_OUTPUT
+          echo "timestamped_container_url=${{ needs.setup.outputs.container_base}}-app:${{ needs.setup.outputs.timestamp }}" >> $GITHUB_OUTPUT
+          echo "latest_container_url=${{ needs.setup.outputs.container_base }}-app:latest" >> $GITHUB_OUTPUT
+          echo "hashed_container_url=${{ needs.setup.outputs.container_base }}-app:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  build_api:
+    environment:
+      name: ${{ needs.setup.outputs.environment }}
+      url: ${{ vars.API_BASE_URL }}
+    name: Build and push API container
+    needs: config_api
+    concurrency: build_api
+    if: needs.setup.outputs.should_build_api == '1'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build the tagged Docker image
+        run: |
+          cd api && docker \
+            build \
+            --build-arg PROJECT_ENV=${{ vars.PROJECT_ENV }} \
+            -t ${{ needs.config_api.outputs.latest_container_url }} \
+            -t ${{ needs.config_api.outputs.timestamped_container_url }} \
+            -t ${{ needs.config_api.outputs.hashed_container_url }} \
+            .
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
+      - name: Docker login
+        run: doctl registry login -t ${{ secrets.DO_TOKEN }}
+      - name: Push api container
+        run: docker push --all-tags ${{ needs.config_api.outputs.container_url }}
+
+  build_app:
+    environment:
+      name: ${{ needs.setup.outputs.environment }}
+      url: ${{ vars.APP_BASE_URL }}
+    name: Build and push app container
+    needs: config_app
+    concurrency: build_app
+    if: needs.setup.outputs.should_build_app == '1'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build the tagged Docker image
+        run: |
+          cd web-app && docker \
+            build \
+            --build-arg PROJECT_ENV=${{ vars.PROJECT_ENV }} \
+            -t ${{ needs.config_app.outputs.latest_container_url }} \
+            -t ${{ needs.config_app.outputs.timestamped_container_url }} \
+            -t ${{ needs.config_app.outputs.hashed_container_url }} \
+            .
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
+      - name: Docker login
+        run: doctl registry login -t ${{ secrets.DO_TOKEN }}
+      - name: Push app container
+        run: docker push --all-tags ${{ needs.config_app.outputs.container_url }}
+
+  deploy:
+    environment:
+      name: ${{ needs.setup.outputs.environment }}
+      url: ${{ vars.APP_BASE_URL }}
+    name: Deploy newly built containers
+    concurrency: deploy
+    if: needs.setup.outputs.should_build_api == '1' || needs.setup.outputs.should_build_app == '1'
+    needs: [build_api, config_api, build_app, config_app, setup]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Fetch kubeconfig
+        run: doctl kubernetes cluster kubeconfig show ${{ needs.setup.outputs.cluster_base}}-${{ vars.CLUSTER_SEGMENT }} -t ${{ secrets.DO_TOKEN }} > $HOME/.kubeconfig
+      - name: Deploy container to api deployment
+        if: needs.setup.outputs.should_build_api == '1'
+        run: kubectl --kubeconfig <(doctl kubernetes cluster kubeconfig show ${{ needs.setup.outputs.cluster_base}}-${{ vars.CLUSTER_SEGMENT }} -t ${{ secrets.DO_TOKEN }}) set image deployment.apps/api ${{ needs.config_api.outputs.container }}=${{ needs.config_api.outputs.hashed_container_url }} -n ${{ needs.setup.outputs.namespace }}
+      - name: Deploy container to worker service
+        if: vars.HAS_WORKER == 'true' && needs.setup.outputs.should_build_api == '1'
+        run: kubectl --kubeconfig <(doctl kubernetes cluster kubeconfig show ${{ needs.setup.outputs.cluster_base}}-${{ vars.CLUSTER_SEGMENT }} -t ${{ secrets.DO_TOKEN }}) set image deployment.apps/worker ${{ needs.setup.outputs.namespace }}-worker=${{ needs.config_api.outputs.hashed_container_url }} -n ${{ needs.setup.outputs.namespace }}
+      - name: Deploy container to app deployment
+        if: needs.setup.outputs.should_build_app == '1'
+        run: kubectl --kubeconfig <(doctl kubernetes cluster kubeconfig show ${{ needs.setup.outputs.cluster_base}}-${{ vars.CLUSTER_SEGMENT }} -t ${{ secrets.DO_TOKEN }}) set image deployment.apps/app ${{ needs.config_app.outputs.container }}=${{ needs.config_app.outputs.hashed_container_url }} -n ${{ needs.setup.outputs.namespace }}
+      - name: Cleanup
+        run: rm -f $HOME/.kubeconfig
+
